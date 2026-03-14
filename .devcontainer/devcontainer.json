@@ -1,0 +1,24 @@
+{
+  "name": "AI Agent VueJS Dev",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode",
+        "ms-playwright.playwright",
+        "ms-vscode-remote.remote-containers"
+      ]
+    }
+  },
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "postCreateCommand": "npm install && npm --prefix backend install && npm --prefix backend run prisma:generate",
+
+  "forwardPorts": [5173, 4000, 5000],
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  }
+}

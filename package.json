@@ -1,0 +1,19 @@
+{
+  "name": "ai_agent",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "mcp"
+  ],
+  "scripts": {
+    "bootstrap": "npm install",
+    "dev": "npm run dev:backend & npm run dev:frontend & npm run dev:mcp",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:mcp": "npm --prefix mcp run dev",
+    "test:e2e": "npm --prefix frontend run test:e2e",
+    "prisma:generate": "npm --prefix backend run prisma:generate",
+    "prisma:migrate": "npm --prefix backend run prisma:migrate"
+  }
+}
