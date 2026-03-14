@@ -1,5 +1,6 @@
 <template>
   <div class="app">
+    <p>Hello World</p>
     <h1>AI Agent Vue + DB + MCP</h1>
     <input v-model="title" placeholder="Tên item" />
     <button @click="addItem">Thêm</button>
@@ -19,6 +20,10 @@
       <button @click="callMcp">Gọi MCP</button>
       <pre>{{ mcpResponse }}</pre>
     </div>
+
+    <div v-if="errorMsg" class="error">
+      {{ errorMsg }}
+    </div>
   </div>
 </template>
 
@@ -35,10 +40,17 @@ type Item = {
 const title = ref("");
 const items = ref<Item[]>([]);
 const mcpResponse = ref("");
+const errorMsg = ref("");
 
 async function loadItems() {
-  const r = await axios.get<Item[]>("/api/items");
-  items.value = r.data;
+  try {
+    const r = await axios.get<Item[]>("/api/items");
+    items.value = r.data;
+    console.log("Loaded items:", r.data);
+  } catch (error) {
+    console.error("Error loading items:", error);
+    errorMsg.value = `Error: ${error}`;
+  }
 }
 
 async function addItem() {
@@ -64,6 +76,7 @@ async function callMcp() {
 }
 
 onMounted(() => {
+  console.log("Component mounted, loading items...");
   loadItems();
 });
 </script>
@@ -74,4 +87,5 @@ body { font-family: Arial, Helvetica, sans-serif; padding: 1rem; }
 .app { max-width: 650px; margin: auto; }
 button { margin-left: 0.75rem; }
 .log { margin-top: 1.5rem; background: #f9f9f9; padding: 0.75rem; border-radius: 6px; }
+.error { margin-top: 1rem; color: red; background: #ffe6e6; padding: 0.5rem; border-radius: 4px; }
 </style>

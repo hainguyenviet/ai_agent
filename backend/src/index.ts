@@ -57,8 +57,8 @@ async function seed() {
 async function main() {
   await seed();
 
-  app.listen(PORT, () => {
-    console.log(`Backend running: http://localhost:${PORT}`);
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Backend running: http://0.0.0.0:${PORT}`);
   });
 }
 
