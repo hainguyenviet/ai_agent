@@ -95,7 +95,7 @@ jobs:
             - Branch protection hoạt động đúng
 
             ## Liên kết
-            - Blocking: #2 (Phase 2 Frontend), Phase 1 (Backend), Phase 3 (MCP)
+            - Blocking: Epic Phase 2 (Frontend), Epic Phase 1 (Backend), Epic Phase 3 (MCP)
             `;
             const result = await github.rest.issues.create({
               owner: context.repo.owner,
@@ -163,8 +163,8 @@ jobs:
             - API trả về dữ liệu đa ngôn ngữ đúng
 
             ## Liên kết
-            - Depends on: #Epic0 (Phase 0 CI/CD)
-            - Blocking: #2 (Phase 2 Frontend)
+            - Depends on: Epic Phase 0 (CI/CD Foundation)
+            - Blocking: Epic Phase 2 (Frontend)
             `;
             const result = await github.rest.issues.create({
               owner: context.repo.owner,
