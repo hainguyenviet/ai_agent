@@ -116,12 +116,18 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const title = '[Epic][Phase 1] Backend: Schema + API bán giày';
-            const existing = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-            });
-            const found = existing.data.find(i => i.title === title);
+            const existingIssues = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'all',
+                per_page: 100,
+              }
+            );
+            const found = existingIssues
+              .filter(issue => !issue.pull_request)
+              .find(issue => issue.title === title);
             if (found) {
               console.log(`ℹ️ Epic 1 đã tồn tại: #${found.number}`);
               return;
