@@ -1,0 +1,255 @@
+name: Create Epic Issues
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/create-epic-issues.yml'
+
+jobs:
+  create-epics:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create Labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labels = [
+              { name: 'epic', color: '7057ff', description: 'Epic - nhóm tính năng lớn' },
+              { name: 'phase-0', color: '0052cc', description: 'Phase 0: Nền tảng CI/CD & DevOps' },
+              { name: 'phase-1', color: '006b75', description: 'Phase 1: Backend API' },
+              { name: 'phase-2', color: 'e4e669', description: 'Phase 2: Frontend' },
+              { name: 'phase-3', color: 'd93f0b', description: 'Phase 3: MCP Playwright Testing' },
+              { name: 'devops', color: '0075ca', description: 'DevOps, CI/CD, hạ tầng' },
+              { name: 'backend', color: '008672', description: 'Backend API, database' },
+              { name: 'mcp', color: 'e99695', description: 'MCP Server & Tools' },
+              { name: 'testing', color: 'fbca04', description: 'Testing: BDD, ATDD, E2E' },
+              { name: 'ci-cd', color: 'c5def5', description: 'Continuous Integration / Continuous Deployment' },
+              { name: 'bdd', color: 'd4c5f9', description: 'Behavior Driven Development' },
+              { name: 'frontend', color: 'bfd4f2', description: 'Frontend: Vue 3, TypeScript, UI/UX' },
+            ];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description,
+                });
+                console.log(`✅ Created label: ${label.name}`);
+              } catch (err) {
+                if (err.status === 422) {
+                  console.log(`ℹ️ Label already exists: ${label.name}`);
+                } else {
+                  throw err;
+                }
+              }
+            }
+
+      - name: Create Epic 0 - CI/CD Foundation
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = '[Epic][Phase 0] Thiết lập nền tảng CI/CD, Trunk-Based, BDD';
+            // Check if issue already exists
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+            const found = existing.data.find(i => i.title === title);
+            if (found) {
+              console.log(`ℹ️ Epic 0 đã tồn tại: #${found.number}`);
+              return;
+            }
+            const body = `## Mục tiêu
+            Thiết lập toàn bộ nền tảng kỹ thuật cho dự án theo mô hình **Trunk-Based Development**, **BDD/ATDD**, và **CI/CD** tự động. Đây là Epic nền tảng cần hoàn thành trước tất cả các Epic khác.
+
+            ## Phạm vi
+            - Cấu hình bảo vệ nhánh (branch protection) cho \`main\`
+            - Thiết lập GitHub Actions CI/CD pipeline
+            - Cấu hình môi trường BDD với Gherkin / Cucumber / Playwright
+            - Chuẩn hóa quy trình commit, code review, và merge theo Trunk-Based
+
+            ## Tasks
+            - [ ] 0.1 Bật branch protection cho nhánh \`main\` (require PR, require CI pass)
+            - [ ] 0.2 Tạo workflow CI/CD GitHub Actions: lint → build → test → deploy
+            - [ ] 0.3 Cấu hình Playwright với BDD runner (cucumber-playwright hoặc tương đương)
+            - [ ] 0.4 Tạo thư mục \`features/\` với cấu trúc Gherkin chuẩn
+            - [ ] 0.5 Viết file \`.feature\` mẫu (Gherkin) cho smoke test
+            - [ ] 0.6 Thiết lập pre-commit hooks (ESLint, Prettier, TypeScript check)
+            - [ ] 0.7 Cấu hình môi trường phát triển: DevContainer, docker-compose
+            - [ ] 0.8 Tạo script seed dữ liệu mẫu cho môi trường dev/test
+            - [ ] 0.9 Viết tài liệu quy trình làm việc (CONTRIBUTING.md)
+            - [ ] 0.10 Thiết lập GitHub Labels, Milestones, Projects để track tiến độ
+
+            ## Definition of Done
+            - CI/CD pipeline chạy tự động khi push/PR lên \`main\`
+            - Tất cả PR phải pass CI mới được merge
+            - Có ít nhất 1 BDD scenario mẫu chạy được trong CI
+            - Branch protection hoạt động đúng
+
+            ## Liên kết
+            - Blocking: #2 (Phase 2 Frontend), Phase 1 (Backend), Phase 3 (MCP)
+            `;
+            const result = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body.replace(/^ {12}/gm, ''),
+              labels: ['epic', 'phase-0', 'devops', 'ci-cd', 'bdd', 'testing'],
+            });
+            console.log(`✅ Created Epic 0: #${result.data.number} - ${result.data.html_url}`);
+
+      - name: Create Epic 1 - Backend API
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = '[Epic][Phase 1] Backend: Schema + API bán giày';
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+            const found = existing.data.find(i => i.title === title);
+            if (found) {
+              console.log(`ℹ️ Epic 1 đã tồn tại: #${found.number}`);
+              return;
+            }
+            const body = `## Mục tiêu
+            Xây dựng toàn bộ Backend API cho hệ thống bán giày Nhật, bao gồm thiết kế database schema, REST API endpoints, và seed data. Tất cả tính năng phải được viết theo mô hình **BDD/ATDD** — viết test trước khi code.
+
+            ## Phạm vi
+            - Thiết kế Prisma schema cho các model chính: Product, Order, OrderItem, User
+            - REST API endpoints đầy đủ cho ecommerce
+            - Hỗ trợ đa ngôn ngữ (VI/EN/JP) ở tầng dữ liệu
+            - Xác thực và phân quyền cơ bản
+
+            ## Tasks
+            ### Database & Schema
+            - [ ] 1.1 Thiết kế Prisma schema: \`Product\` (sku, brand, translations, price, sizes, stock)
+            - [ ] 1.2 Thiết kế Prisma schema: \`Order\`, \`OrderItem\` (tracking, status, customerId)
+            - [ ] 1.3 Thiết kế Prisma schema: \`User\` (admin/customer roles)
+            - [ ] 1.4 Tạo Prisma migrations và seed data (10+ sản phẩm giày Nhật mẫu)
+
+            ### API Endpoints
+            - [ ] 1.5 \`GET /api/products\` — danh sách sản phẩm (filter: brand, size, price, lang)
+            - [ ] 1.6 \`GET /api/products/:id\` — chi tiết sản phẩm theo ngôn ngữ
+            - [ ] 1.7 \`POST /api/orders\` — tạo đơn hàng mới
+            - [ ] 1.8 \`GET /api/orders/:trackingCode\` — theo dõi đơn hàng
+            - [ ] 1.9 \`GET /api/orders\` — danh sách đơn hàng (admin)
+            - [ ] 1.10 \`PATCH /api/orders/:id/status\` — cập nhật trạng thái đơn hàng (admin)
+
+            ### Testing (BDD/ATDD)
+            - [ ] 1.11 Viết Gherkin \`.feature\` file cho API products
+            - [ ] 1.12 Viết Gherkin \`.feature\` file cho API orders
+            - [ ] 1.13 Viết unit tests cho service layer
+            - [ ] 1.14 Viết integration tests cho API endpoints
+
+            ### DevOps
+            - [ ] 1.15 Cấu hình environment variables (dev/test/prod)
+            - [ ] 1.16 Tạo Docker image cho backend service
+
+            ## Definition of Done
+            - Tất cả API endpoints hoạt động với dữ liệu thực
+            - Seed data đầy đủ để demo
+            - BDD scenarios pass trong CI
+            - API trả về dữ liệu đa ngôn ngữ đúng
+
+            ## Liên kết
+            - Depends on: #Epic0 (Phase 0 CI/CD)
+            - Blocking: #2 (Phase 2 Frontend)
+            `;
+            const result = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body.replace(/^ {12}/gm, ''),
+              labels: ['epic', 'phase-1', 'backend', 'testing', 'bdd'],
+            });
+            console.log(`✅ Created Epic 1: #${result.data.number} - ${result.data.html_url}`);
+
+      - name: Create Epic 3 - MCP Playwright Testing
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = '[Epic][Phase 3] MCP Playwright Testing';
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+            const found = existing.data.find(i => i.title === title);
+            if (found) {
+              console.log(`ℹ️ Epic 3 đã tồn tại: #${found.number}`);
+              return;
+            }
+            const body = `## Mục tiêu
+            Nâng cấp MCP stub server hiện tại thành **MCP Server thực sự** sử dụng \`@modelcontextprotocol/sdk\` và **Playwright** để tự động kiểm thử toàn bộ trang web bán giày. Server này cho phép Claude AI tương tác với trang web qua các tools.
+
+            ## Phạm vi
+            - Chuyển đổi từ MCP stub (Express.js đơn giản) sang MCP thật dùng \`@modelcontextprotocol/sdk\`
+            - Tích hợp Playwright để điều khiển browser tự động
+            - Viết MCP tools bao phủ toàn bộ user journey của trang web bán giày
+            - Tích hợp vào CI/CD pipeline
+
+            ## Tasks
+            ### Setup & Migration
+            - [ ] 3.1 Cài đặt \`@modelcontextprotocol/sdk\` và \`playwright\` vào \`mcp/package.json\`
+            - [ ] 3.2 Chuyển \`mcp/src/server.js\` → \`mcp/src/index.ts\` (TypeScript)
+            - [ ] 3.3 Tạo \`McpServer\` instance với \`StdioServerTransport\`
+            - [ ] 3.4 Cấu hình \`mcp/tsconfig.json\` và build scripts
+
+            ### MCP Tools - Navigation
+            - [ ] 3.5 Tool: \`navigate_to_page\` — mở URL bất kỳ của trang web
+            - [ ] 3.6 Tool: \`take_screenshot\` — chụp ảnh màn hình để kiểm tra UI
+            - [ ] 3.7 Tool: \`get_page_title\` — lấy tiêu đề trang
+
+            ### MCP Tools - Đa ngôn ngữ
+            - [ ] 3.8 Tool: \`switch_language\` — chuyển đổi ngôn ngữ (vi/en/ja)
+            - [ ] 3.9 Tool: \`verify_i18n_text\` — kiểm tra text hiển thị đúng ngôn ngữ
+
+            ### MCP Tools - Sản phẩm
+            - [ ] 3.10 Tool: \`search_product\` — tìm kiếm sản phẩm theo từ khóa
+            - [ ] 3.11 Tool: \`filter_products\` — lọc theo thương hiệu/size/giá
+            - [ ] 3.12 Tool: \`view_product_detail\` — xem chi tiết sản phẩm
+
+            ### MCP Tools - Giỏ hàng & Checkout
+            - [ ] 3.13 Tool: \`add_to_cart\` — thêm sản phẩm vào giỏ hàng
+            - [ ] 3.14 Tool: \`view_cart\` — xem giỏ hàng
+            - [ ] 3.15 Tool: \`fill_checkout_form\` — điền thông tin đặt hàng
+            - [ ] 3.16 Tool: \`submit_order\` — xác nhận đặt hàng
+            - [ ] 3.17 Tool: \`track_order\` — theo dõi đơn hàng bằng mã tracking
+
+            ### BDD Integration
+            - [ ] 3.18 Viết Gherkin \`.feature\` file cho mỗi MCP tool
+            - [ ] 3.19 Tích hợp MCP tests vào GitHub Actions CI/CD
+            - [ ] 3.20 Tạo file cấu hình MCP cho Claude Desktop (\`mcp-config.json\`)
+
+            ## Definition of Done
+            - MCP Server khởi động được và connect với Claude Desktop
+            - Tất cả tools test được qua Claude AI
+            - CI/CD chạy automated Playwright tests
+            - Có tài liệu hướng dẫn sử dụng MCP tools
+
+            ## Liên kết
+            - Depends on: #2 (Phase 2 Frontend hoàn thiện)
+            - Depends on: Backend API (Phase 1)
+            `;
+            const result = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body.replace(/^ {12}/gm, ''),
+              labels: ['epic', 'phase-3', 'mcp', 'testing', 'bdd'],
+            });
+            console.log(`✅ Created Epic 3: #${result.data.number} - ${result.data.html_url}`);
