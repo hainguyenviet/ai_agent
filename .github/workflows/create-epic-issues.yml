@@ -56,13 +56,17 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const title = '[Epic][Phase 0] Thiết lập nền tảng CI/CD, Trunk-Based, BDD';
-            // Check if issue already exists
-            const existing = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-            });
-            const found = existing.data.find(i => i.title === title);
+            // Check if issue already exists (across all issues, excluding PRs)
+            const issues = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'all',
+                per_page: 100,
+              }
+            );
+            const found = issues.find(i => !i.pull_request && i.title === title);
             if (found) {
               console.log(`ℹ️ Epic 0 đã tồn tại: #${found.number}`);
               return;
