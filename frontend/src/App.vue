@@ -28,14 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import axios from "axios";
 import { ref, onMounted } from "vue";
-
-type Item = {
-  id: number;
-  title: string;
-  completed: boolean;
-};
+import { feAgent, type Item } from "./agents/FeAgent";
 
 const title = ref("");
 const items = ref<Item[]>([]);
@@ -44,9 +38,8 @@ const errorMsg = ref("");
 
 async function loadItems() {
   try {
-    const r = await axios.get<Item[]>("/api/items");
-    items.value = r.data;
-    console.log("Loaded items:", r.data);
+    items.value = await feAgent.getItems();
+    console.log("Loaded items:", items.value);
   } catch (error) {
     console.error("Error loading items:", error);
     errorMsg.value = `Error: ${error}`;
@@ -55,24 +48,44 @@ async function loadItems() {
 
 async function addItem() {
   if (!title.value.trim()) return;
-  await axios.post("/api/items", { title: title.value });
-  title.value = "";
-  await loadItems();
+  try {
+    await feAgent.addItem(title.value);
+    title.value = "";
+    await loadItems();
+  } catch (error) {
+    console.error("Error adding item:", error);
+    errorMsg.value = `Error: ${error}`;
+  }
 }
 
 async function toggle(id: number) {
-  await axios.patch(`/api/items/${id}/toggle`);
-  await loadItems();
+  try {
+    await feAgent.toggleItem(id);
+    await loadItems();
+  } catch (error) {
+    console.error("Error toggling item:", error);
+    errorMsg.value = `Error: ${error}`;
+  }
 }
 
 async function remove(id: number) {
-  await axios.delete(`/api/items/${id}`);
-  await loadItems();
+  try {
+    await feAgent.removeItem(id);
+    await loadItems();
+  } catch (error) {
+    console.error("Error removing item:", error);
+    errorMsg.value = `Error: ${error}`;
+  }
 }
 
 async function callMcp() {
-  const r = await axios.post("/mcp/context", { message: "kích hoạt MCP" });
-  mcpResponse.value = JSON.stringify(r.data, null, 2);
+  try {
+    const response = await feAgent.triggerMcp("kích hoạt MCP");
+    mcpResponse.value = JSON.stringify(response, null, 2);
+  } catch (error) {
+    console.error("Error calling MCP:", error);
+    errorMsg.value = `Error: ${error}`;
+  }
 }
 
 onMounted(() => {
