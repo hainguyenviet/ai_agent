@@ -6,13 +6,40 @@ export function useItems() {
   const errorMsg = ref("");
   const loading = ref(false);
 
+  function getErrorMessage(error: unknown): string {
+    if (typeof error === "string") {
+      return error;
+    }
+
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    const anyError = error as any;
+
+    const axiosMessage =
+      anyError?.response?.data?.error ??
+      anyError?.response?.data?.message ??
+      anyError?.message;
+
+    if (typeof axiosMessage === "string") {
+      return axiosMessage;
+    }
+
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+
   async function loadItems() {
     loading.value = true;
     errorMsg.value = "";
     try {
       items.value = await itemsService.getAll();
-    } catch (error) {
-      errorMsg.value = `Error loading items: ${error}`;
+    } catch (error: unknown) {
+      errorMsg.value = `Error loading items: ${getErrorMessage(error)}`;
     } finally {
       loading.value = false;
     }
@@ -23,8 +50,8 @@ export function useItems() {
     try {
       await itemsService.create({ title });
       await loadItems();
-    } catch (error) {
-      errorMsg.value = `Error adding item: ${error}`;
+    } catch (error: unknown) {
+      errorMsg.value = `Error adding item: ${getErrorMessage(error)}`;
     }
   }
 
@@ -32,8 +59,8 @@ export function useItems() {
     try {
       await itemsService.toggle(id);
       await loadItems();
-    } catch (error) {
-      errorMsg.value = `Error toggling item: ${error}`;
+    } catch (error: unknown) {
+      errorMsg.value = `Error toggling item: ${getErrorMessage(error)}`;
     }
   }
 
@@ -41,8 +68,8 @@ export function useItems() {
     try {
       await itemsService.remove(id);
       await loadItems();
-    } catch (error) {
-      errorMsg.value = `Error removing item: ${error}`;
+    } catch (error: unknown) {
+      errorMsg.value = `Error removing item: ${getErrorMessage(error)}`;
     }
   }
 
