@@ -41,7 +41,7 @@ COPY mcp/src/server.js ./mcp/src/server.js
 
 ENV NODE_ENV=production
 
-EXPOSE 4000 5000
+EXPOSE 4000
 
 # Run database migrations then start the backend.
 # Tip: mount a volume at /data to persist the SQLite database across restarts.
