@@ -39,7 +39,6 @@ COPY --from=builder /app/frontend/dist ./frontend/dist
 # Copy only MCP server runtime files
 COPY mcp/src/server.js ./mcp/src/server.js
 
-ENV DATABASE_URL=file:/data/app.db
 ENV NODE_ENV=production
 
 EXPOSE 4000 5000
