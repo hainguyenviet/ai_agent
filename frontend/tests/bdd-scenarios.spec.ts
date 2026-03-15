@@ -7,6 +7,9 @@
 
 import { test, expect } from "@playwright/test";
 
+// Run all scenarios in this file serially to avoid flakiness with shared DB state.
+test.describe.configure({ mode: "serial" });
+
 // ---------------------------------------------------------------------------
 // Scenario: Hiển thị danh sách items khi load trang
 // ---------------------------------------------------------------------------
