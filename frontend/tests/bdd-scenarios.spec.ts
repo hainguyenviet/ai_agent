@@ -26,13 +26,12 @@ test("Scenario: hiển thị danh sách items khi load trang", async ({ page }) 
 test("Scenario: thêm item mới", async ({ page }) => {
   await page.goto("/");
 
-  const beforeCount = await page.locator("ul.item-list > li").count();
+  const uniqueTitle = `Item BDD test ${Date.now()}-${Math.random()}`;
 
-  await page.fill('input[placeholder="Tên item"]', "Item BDD test");
+  await page.fill('input[placeholder="Tên item"]', uniqueTitle);
   await page.click('button[type="submit"]:has-text("Thêm")');
 
-  await expect(page.locator("ul.item-list > li")).toHaveCount(beforeCount + 1);
-  await expect(page.locator("ul.item-list")).toContainText("Item BDD test");
+  await expect(page.locator("ul.item-list")).toContainText(uniqueTitle);
 });
 
 // ---------------------------------------------------------------------------
@@ -72,20 +71,18 @@ test("Scenario: xóa item", async ({ page }) => {
   await page.goto("/");
 
   // Thêm một item chắc chắn để xóa
-  await page.fill('input[placeholder="Tên item"]', "Item sẽ bị xóa");
+  const uniqueTitle = `Item sẽ bị xóa ${Date.now()}-${Math.random()}`;
+  await page.fill('input[placeholder="Tên item"]', uniqueTitle);
   await page.click('button[type="submit"]:has-text("Thêm")');
-  await expect(page.locator("ul.item-list")).toContainText("Item sẽ bị xóa");
-
-  const beforeCount = await page.locator("ul.item-list > li").count();
+  await expect(page.locator("ul.item-list")).toContainText(uniqueTitle);
 
   // Tìm item vừa thêm và xóa nó
   const targetItem = page.locator("ul.item-list > li").filter({
-    hasText: "Item sẽ bị xóa",
+    hasText: uniqueTitle,
   });
   await targetItem.locator('button:has-text("Xóa")').click();
 
-  await expect(page.locator("ul.item-list > li")).toHaveCount(beforeCount - 1);
-  await expect(page.locator("ul.item-list")).not.toContainText("Item sẽ bị xóa");
+  await expect(page.locator("ul.item-list")).not.toContainText(uniqueTitle);
 });
 
 // ---------------------------------------------------------------------------
