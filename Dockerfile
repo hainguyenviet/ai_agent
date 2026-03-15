@@ -19,12 +19,12 @@ RUN npm --prefix backend run prisma:generate \
 FROM node:22-alpine
 WORKDIR /app
 
-# Install production dependencies only (no dev tools like typescript, playwright, etc.)
+# Install dependencies (including devDependencies so Prisma CLI is available for migrations)
 COPY package*.json ./
 COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
 COPY mcp/package.json ./mcp/
-RUN npm ci --omit=dev
+RUN npm ci
 
 # Copy generated Prisma client (produced by prisma generate in builder)
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
@@ -47,4 +47,4 @@ EXPOSE 4000 5000
 # Run database migrations then start the backend.
 # Tip: mount a volume at /data to persist the SQLite database across restarts.
 WORKDIR /app/backend
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
