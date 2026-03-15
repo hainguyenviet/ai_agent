@@ -40,23 +40,28 @@ test("Scenario: thêm item mới", async ({ page }) => {
 test("Scenario: đánh dấu item hoàn thành", async ({ page }) => {
   await page.goto("/");
 
-  // Đảm bảo có ít nhất 1 item
-  const listItems = page.locator("ul.item-list > li");
-  const count = await listItems.count();
-  if (count === 0) {
-    await page.fill('input[placeholder="Tên item"]', "Item để toggle");
-    await page.click('button[type="submit"]:has-text("Thêm")');
-    await expect(listItems).toHaveCount(1);
-  }
+  // Tạo một item chuyên biệt cho scenario này để tránh phụ thuộc global state
+  const toggleItemTitle = "Item BDD toggle";
+  await page.fill('input[placeholder="Tên item"]', toggleItemTitle);
+  await page.click('button[type="submit"]:has-text("Thêm")');
 
-  const firstCheckbox = listItems.first().locator('input[type="checkbox"]');
-  const wasChecked = await firstCheckbox.isChecked();
-  await firstCheckbox.click();
+  const listItems = page.locator("ul.item-list > li");
+  const targetItem = listItems.filter({ hasText: toggleItemTitle });
+  await expect(targetItem).toHaveCount(1);
+
+  const checkbox = targetItem.locator('input[type="checkbox"]');
+  const wasChecked = await checkbox.isChecked();
+  await checkbox.click();
 
   // Trạng thái checkbox phải thay đổi
-  await expect(firstCheckbox).toBeChecked({ checked: !wasChecked });
+  if (!wasChecked) {
+    await expect(checkbox).toBeChecked();
+  } else {
+    await expect(checkbox).not.toBeChecked();
+  }
+
   // Span title có class completed hoặc không tuỳ trạng thái trước
-  const span = listItems.first().locator("span");
+  const span = targetItem.locator("span");
   if (!wasChecked) {
     await expect(span).toHaveClass(/completed/);
   } else {
