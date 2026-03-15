@@ -4,7 +4,10 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const app = express();
-const PORT = process.env.PORT || 4000;
+const rawPort = process.env.PORT;
+const parsedPort =
+  rawPort !== undefined && rawPort.trim() !== "" ? Number(rawPort) : NaN;
+const PORT = Number.isFinite(parsedPort) ? parsedPort : 4000;
 
 app.use(cors());
 app.use(express.json());
