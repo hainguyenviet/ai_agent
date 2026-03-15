@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -7,8 +7,36 @@ on:
     branches: [main]
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm --prefix backend run prisma:generate
+
+      - name: Lint frontend (TypeScript check)
+        run: npm --prefix frontend run lint
+
+      - name: Lint backend (TypeScript check)
+        run: npm --prefix backend run lint
+
   build:
     name: Build
+    needs: lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,3 +61,106 @@ jobs:
 
       - name: Build frontend (Vite)
         run: npm --prefix frontend run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            backend/dist/
+            frontend/dist/
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Generate Prisma client
+        run: npm --prefix backend run prisma:generate
+
+      - name: Run database migrations
+        run: npm --prefix backend run prisma:migrate:deploy
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+        working-directory: frontend
+
+      - name: Start backend server
+        run: node backend/dist/index.js &
+
+      - name: Start MCP server
+        run: node mcp/src/server.js &
+
+      - name: Start frontend preview
+        run: npm --prefix frontend run preview -- --port 5173 &
+
+      - name: Wait for servers to be ready
+        run: |
+          echo "Waiting for servers..."
+          for url in "http://localhost:4000/api/items" "http://localhost:5000/mcp/status" "http://localhost:5173"; do
+            for i in $(seq 1 30); do
+              if curl -sf "$url" -o /dev/null; then
+                echo "$url is ready"
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "Timed out waiting for $url"
+                exit 1
+              fi
+              sleep 1
+            done
+          done
+
+      - name: Run E2E tests
+        run: npm --prefix frontend run test:e2e
+
+  deploy:
+    name: Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+
